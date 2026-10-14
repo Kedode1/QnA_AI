@@ -5,6 +5,9 @@ build/
 dist/
 wheels/
 *.egg-info
+.vscode/*.db
 
 # Virtual environments
 .venv
+.vscode/browse.vc.db .vscode/browse.vc.db.lock .vscode/browse.vc.db-shm .vscode/browse.vc.db-wal
+.vscode/browse.vc.db.lock
