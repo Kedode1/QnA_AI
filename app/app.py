@@ -1,10 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
 from app.schemas import DocumentCreate, DocumentResponse
 import app.models as models
 from uuid import uuid4
 from datetime import datetime, timezone
 from app.database import SessionLocal, engine
 from sqlalchemy.orm import Session
+from app.validation import validate_upload
 
 
 app = FastAPI()
@@ -33,18 +34,22 @@ async def read_document(document_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Document not found")
     return document
 
-
-@app.post("/documents/", response_model=DocumentResponse, status_code=201)
-async def create_document(document: DocumentCreate, db: Session = Depends(get_db)):
+@app.post("/documents/",response_model=DocumentResponse, status_code=201) 
+async def create_document(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        file_content = await file.read()
+        extension = validate_upload(file.filename, file_content)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     new_document = models.Document(
         id=str(uuid4()),
-        title=document.title,
-        content=document.content,
-        source=document.source,
+        title=file.filename or "Untitled",
+        source=file.filename or "Unknown",
+        content=file_content.decode("utf-8") if extension == ".txt" else None,
+        file_data=file_content if extension == ".pdf" else None,
         created_at=datetime.now(timezone.utc)
     )
     db.add(new_document)
     db.commit()
     db.refresh(new_document)
     return new_document
-

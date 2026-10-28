@@ -6,13 +6,13 @@ from uuid import UUID, uuid4
 
 class DocumentCreate(BaseModel):
     title: str
-    content: str
+    content: str | None
     source: str = Field(description="The source of the document")
 
 
 class DocumentResponse(BaseModel):
     id: UUID
     title: str
-    content: str
+    content: str | None
     source: str
     created_at: datetime
